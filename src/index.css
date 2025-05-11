@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #6b7280;
+  --secondary: #9ca3af;
+  --accent: #3b82f6;
+  --bg: #e5e7eb;
+  --text: #1f2937;
+  --frost-blur: 10px;
+}
+
+[data-theme="dark"] {
+  --primary: #4b5563;
+  --secondary: #6b7280;
+  --accent: #60a5fa;
+  --bg: #1f2937;
+  --text: #f3f4f6;
+}
+
+[data-theme="pastel"] {
+  --primary: #a3bffa;
+  --secondary: #fbcfe8;
+  --accent: #f9a8d4;
+  --bg: #f3e8ff;
+  --text: #4b5563;
+}
+
+/* Add more palettes (neon, frost, etc.) */
+[data-theme="neon"] {
+  --primary: #ff6e6e;
+  --secondary: #40c4ff;
+  --accent: #ffeb3b;
+  --bg: #1a1a1a;
+  --text: #ffffff;
+}
+
+[data-theme="frost"] {
+  --primary: #b3e5fc;
+  --secondary: #e1f5fe;
+  --accent: #4fc3f7;
+  --bg: #eceff1;
+  --text: #263238;
+}
+
+/* Add remaining palettes similarly */
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-size: 16px; /* Default */
+  transition: all 0.3s ease;
+}
+
+.frosted-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(var(--frost-blur));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.neumorphic {
+  background: var(--bg);
+  border-radius: 12px;
+  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2), -5px -5px 15px rgba(255, 255, 255, 0.5);
+  transition: transform 0.2s ease;
+}
+
+.neumorphic:active {
+  transform: scale(0.95);
+}
+
+input, select, button {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus {
+  transform: scale(1.05);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+button:hover {
+  transform: scale(1.1);
+}
