@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { format, addMinutes } from "date-fns";
 import { useLogs } from "../hooks/useLogs";
 import { useCategories } from "../hooks/useCategories";
 import { useVoice } from "../hooks/useVoice";
 import FrostedCard from "./FrostedCard";
+import CustomDatePicker from "./CustomDatePicker";
+import CustomTimePicker from "./CustomTimePicker";
 import { vibrate } from "../utils/haptic";
 
 function LogForm({ onLogAdded }) {
@@ -22,6 +22,9 @@ function LogForm({ onLogAdded }) {
   const [errors, setErrors] = useState({});
   const [newCategory, setNewCategory] = useState("");
   const [newSubcategory, setNewSubcategory] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
   useEffect(() => {
     if (transcript) {
@@ -34,7 +37,6 @@ function LogForm({ onLogAdded }) {
   }, [transcript]);
 
   const parseVoiceInput = (text) => {
-    // Simple parsing logic (improve based on testing)
     const parts = text.toLowerCase().split(" ");
     let parsed = { category: "", subcategory: "None", startTime: null, endTime: null };
     if (parts.includes("from")) {
@@ -45,13 +47,12 @@ function LogForm({ onLogAdded }) {
         parsed.endTime = parseTime(parts[toIndex + 1]);
       }
     }
-    parsed.category = parts[0]; // First word as category
+    parsed.category = parts[0];
     parsed.subcategory = parts[1] || "None";
     return parsed;
   };
 
   const parseTime = (timeStr) => {
-    // Basic time parsing (e.g., "9am" -> Date)
     const now = new Date();
     const match = timeStr.match(/(\d+)(am|pm)/);
     if (match) {
@@ -79,7 +80,7 @@ function LogForm({ onLogAdded }) {
     e.preventDefault();
     if (!validate()) return;
 
-    const duration = (endTime - startTime) / (1000 * 60); // Minutes
+    const duration = (endTime - startTime) / (1000 * 60);
     const log = {
       id: Date.now().toString(),
       date: format(date, "yyyy-MM-dd"),
@@ -92,7 +93,7 @@ function LogForm({ onLogAdded }) {
 
     addLog(log);
     onLogAdded();
-    vibrate(50); // Haptic feedback
+    vibrate(50);
     resetForm();
   };
 
@@ -121,33 +122,89 @@ function LogForm({ onLogAdded }) {
     }
   };
 
+  // Ensure quick-select buttons use default categories
+  const quickSelectActivities = [
+    { category: "Eat", subcategory: "Breakfast" },
+    { category: "Workout", subcategory: "Cardio" },
+    { category: "Study", subcategory: "Reading" },
+    { category: "Work", subcategory: "Meetings" },
+    { category: "Leisure", subcategory: "TV/Movies" },
+  ];
+
+  const handleQuickSelect = (activity) => {
+    setCategory(activity.category);
+    setSubcategory(activity.subcategory);
+  };
+
+  const handleDurationSelect = (minutes) => {
+    setEndTime(addMinutes(startTime, minutes));
+  };
+
   return (
-    <FrostedCard className="mb-4">
+    <FrostedCard className="mb-6">
       <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-sm">Date</label>
-          <DatePicker
-            selected={date}
-            onChange={setDate}
-            dateFormat="yyyy-MM-dd"
-            className="neumorphic p-2 w-full rounded"
-          />
+        <div className="mb-6">
+          <label className="block text-sm mb-2">Quick Select</label>
+          <div className="flex flex-wrap gap-2">
+            {quickSelectActivities.map((activity) => (
+              <motion.button
+                key={`${activity.category}-${activity.subcategory}`}
+                type="button"
+                onClick={() => handleQuickSelect(activity)}
+                className={`neumorphic p-2 rounded-lg text-sm ${
+                  category === activity.category && subcategory === activity.subcategory
+                    ? "neumorphic-pressed bg-[var(--accent)] text-white"
+                    : ""
+                }`}
+                whileTap={{ scale: 0.9 }}
+              >
+                {activity.category} - {activity.subcategory}
+              </motion.button>
+            ))}
+          </div>
         </div>
-        <div className="mb-4">
-          <label className="block text-sm">Category</label>
+        <div className="mb-6">
+          <label className="block text-sm mb-2">Date</label>
+          <motion.button
+            type="button"
+            onClick={() => setShowDatePicker(true)}
+            className="neumorphic p-3 w-full rounded-lg text-left"
+            whileTap={{ scale: 0.9 }}
+          >
+            {format(date, "yyyy-MM-dd")}
+          </motion.button>
+          {showDatePicker && (
+            <motion.div
+              className="fixed inset-0 frosted-glass flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <CustomDatePicker
+                selected={date}
+                onChange={(newDate) => setDate(newDate)}
+                onClose={() => setShowDatePicker(false)}
+              />
+            </motion.div>
+          )}
+        </div>
+        <div className="mb-6">
+          <label className="block text-sm mb-2">Category</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="neumorphic p-2 w-full rounded"
+            className="neumorphic p-3 w-full rounded-lg"
           >
             <option value="">Select Category</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.name}>{cat.name}</option>
+              <option key={cat.id} value={cat.name}>
+                {cat.name}
+              </option>
             ))}
           </select>
           {errors.category && (
             <motion.p
-              className="text-red-500 text-xs"
+              className="text-red-500 text-xs mt-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
@@ -159,29 +216,32 @@ function LogForm({ onLogAdded }) {
             placeholder="New Category"
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
-            className="neumorphic p-2 w-full mt-2 rounded"
+            className="neumorphic p-3 w-full mt-2 rounded-lg"
           />
-          <button
+          <motion.button
             type="button"
             onClick={handleAddCategory}
-            className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-white"
+            className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-white rounded-lg"
+            whileTap={{ scale: 0.9 }}
           >
             Add Category
-          </button>
+          </motion.button>
         </div>
-        <div className="mb-4">
-          <label className="block text-sm">Subcategory</label>
+        <div className="mb-6">
+          <label className="block text-sm mb-2">Subcategory</label>
           <select
             value={subcategory}
             onChange={(e) => setSubcategory(e.target.value)}
-            className="neumorphic p-2 w-full rounded"
+            className="neumorphic p-3 w-full rounded-lg"
           >
             <option value="None">None</option>
             {category &&
               categories
                 .find((cat) => cat.name === category)
                 ?.subcategories.map((sub) => (
-                  <option key={sub.id} value={sub.name}>{sub.name}</option>
+                  <option key={sub.id} value={sub.name}>
+                    {sub.name}
+                  </option>
                 ))}
           </select>
           <input
@@ -189,31 +249,44 @@ function LogForm({ onLogAdded }) {
             placeholder="New Subcategory"
             value={newSubcategory}
             onChange={(e) => setNewSubcategory(e.target.value)}
-            className="neumorphic p-2 w-full mt-2 rounded"
+            className="neumorphic p-3 w-full mt-2 rounded-lg"
           />
-          <button
+          <motion.button
             type="button"
             onClick={handleAddSubcategory}
-            className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-white"
+            className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-white rounded-lg"
+            whileTap={{ scale: 0.9 }}
           >
             Add Subcategory
-          </button>
+          </motion.button>
         </div>
-        <div className="mb-4">
-          <label className="block text-sm">Start Time</label>
-          <DatePicker
-            selected={startTime}
-            onChange={setStartTime}
-            showTimeSelect
-            showTimeSelectOnly
-            timeIntervals={15}
-            timeCaption="Time"
-            dateFormat="HH:mm"
-            className="neumorphic p-2 w-full rounded"
-          />
+        <div className="mb-6">
+          <label className="block text-sm mb-2">Start Time</label>
+          <motion.button
+            type="button"
+            onClick={() => setShowStartTimePicker(true)}
+            className="neumorphic p-3 w-full rounded-lg text-left"
+            whileTap={{ scale: 0.9 }}
+          >
+            {startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </motion.button>
+          {showStartTimePicker && (
+            <motion.div
+              className="fixed inset-0 frosted-glass flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <CustomTimePicker
+                value={startTime}
+                onChange={(newTime) => setStartTime(newTime)}
+                onClose={() => setShowStartTimePicker(false)}
+              />
+            </motion.div>
+          )}
           {errors.startTime && (
             <motion.p
-              className="text-red-500 text-xs"
+              className="text-red-500 text-xs mt-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
@@ -221,32 +294,57 @@ function LogForm({ onLogAdded }) {
             </motion.p>
           )}
         </div>
-        <div className="mb-4">
-          <label className="block text-sm">End Time</label>
-          <DatePicker
-            selected={endTime}
-            onChange={setEndTime}
-            showTimeSelect
-            showTimeSelectOnly
-            timeIntervals={15}
-            timeCaption="Time"
-            dateFormat="HH:mm"
-            className="neumorphic p-2 w-full rounded"
-          />
+        <div className="mb-6">
+          <label className="block text-sm mb-2">End Time</label>
+          <motion.button
+            type="button"
+            onClick={() => setShowEndTimePicker(true)}
+            className="neumorphic p-3 w-full rounded-lg text-left"
+            whileTap={{ scale: 0.9 }}
+          >
+            {endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </motion.button>
+          {showEndTimePicker && (
+            <motion.div
+              className="fixed inset-0 frosted-glass flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <CustomTimePicker
+                value={endTime}
+                onChange={(newTime) => setEndTime(newTime)}
+                onClose={() => setShowEndTimePicker(false)}
+              />
+            </motion.div>
+          )}
           {errors.endTime && (
             <motion.p
-              className="text-red-500 text-xs"
+              className="text-red-500 text-xs mt-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
               {errors.endTime}
             </motion.p>
           )}
+          <div className="flex gap-2 mt-2">
+            {[15, 30, 60].map((minutes) => (
+              <motion.button
+                key={minutes}
+                type="button"
+                onClick={() => handleDurationSelect(minutes)}
+                className="neumorphic p-2 rounded-lg text-sm"
+                whileTap={{ scale: 0.9 }}
+              >
+                {minutes} min
+              </motion.button>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-4">
           <motion.button
             type="submit"
-            className="neumorphic p-2 flex-1 bg-[var(--accent)] text-white"
+            className="neumorphic p-3 flex-1 bg-[var(--accent)] text-white rounded-lg"
             whileTap={{ scale: 0.9 }}
           >
             Log Activity
@@ -254,7 +352,9 @@ function LogForm({ onLogAdded }) {
           <motion.button
             type="button"
             onClick={startListening}
-            className={`neumorphic p-2 flex-1 ${isListening ? "bg-red-500" : "bg-[var(--secondary)]"} text-white`}
+            className={`neumorphic p-3 flex-1 ${
+              isListening ? "neumorphic-pressed bg-red-500" : "bg-[var(--secondary)]"
+            } text-white rounded-lg`}
             whileTap={{ scale: 0.9 }}
           >
             {isListening ? "Stop Voice" : "Voice Input"}

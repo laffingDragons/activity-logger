@@ -18,18 +18,19 @@ function App() {
     <div className="min-h-screen" style={{ fontSize }}>
       <Router>
         <motion.header
-          className="frosted-glass p-4 flex justify-between items-center"
+          className="frosted-glass p-6 flex justify-between items-center"
           initial={{ y: -100 }}
           animate={{ y: 0 }}
           transition={{ type: "spring", stiffness: 120 }}
         >
           <h1 className="text-xl font-bold">Activity Logger</h1>
-          <button
+          <motion.button
             className="neumorphic p-2 rounded-full"
             onClick={() => setShowSettings(true)}
+            whileTap={{ scale: 0.9 }}
           >
             ⚙️
-          </button>
+          </motion.button>
         </motion.header>
         <Routes>
           <Route path="/" element={<LogPage />} />

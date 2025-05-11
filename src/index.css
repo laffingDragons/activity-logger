@@ -1,71 +1,77 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #6b7280;
-  --secondary: #9ca3af;
-  --accent: #3b82f6;
-  --bg: #e5e7eb;
-  --text: #1f2937;
-  --frost-blur: 10px;
+  --primary: #D6BCFA;
+  --secondary: #E9D8FD;
+  --accent: #B794F4;
+  --bg: #F3F4F8;
+  --text: #4B5563;
+  --frost-blur: 12px;
 }
 
 [data-theme="dark"] {
-  --primary: #4b5563;
-  --secondary: #6b7280;
-  --accent: #60a5fa;
-  --bg: #1f2937;
-  --text: #f3f4f6;
+  --primary: #A78BFA;
+  --secondary: #C4B5FD;
+  --accent: #8B5CF6;
+  --bg: #1F2937;
+  --text: #F3F4F6;
 }
 
 [data-theme="pastel"] {
-  --primary: #a3bffa;
-  --secondary: #fbcfe8;
-  --accent: #f9a8d4;
-  --bg: #f3e8ff;
-  --text: #4b5563;
+  --primary: #D6BCFA;
+  --secondary: #E9D8FD;
+  --accent: #B794F4;
+  --bg: #F3F4F8;
+  --text: #4B5563;
 }
 
 /* Add more palettes (neon, frost, etc.) */
 [data-theme="neon"] {
-  --primary: #ff6e6e;
-  --secondary: #40c4ff;
-  --accent: #ffeb3b;
-  --bg: #1a1a1a;
-  --text: #ffffff;
+  --primary: #FF6E6E;
+  --secondary: #40C4FF;
+  --accent: #FFEB3B;
+  --bg: #1A1A1A;
+  --text: #FFFFFF;
 }
 
 [data-theme="frost"] {
-  --primary: #b3e5fc;
-  --secondary: #e1f5fe;
-  --accent: #4fc3f7;
-  --bg: #eceff1;
+  --primary: #B3E5FC;
+  --secondary: #E1F5FE;
+  --accent: #4FC3F7;
+  --bg: #ECEFF1;
   --text: #263238;
 }
-
-/* Add remaining palettes similarly */
 
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-size: 16px; /* Default */
+  font-size: 16px;
   transition: all 0.3s ease;
 }
 
 .frosted-glass {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(243, 232, 255, 0.5); /* #F3E8FF with opacity for frosted effect */
   backdrop-filter: blur(var(--frost-blur));
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .neumorphic {
   background: var(--bg);
-  border-radius: 12px;
-  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2), -5px -5px 15px rgba(255, 255, 255, 0.5);
-  transition: transform 0.2s ease;
+  border-radius: 16px;
+  box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.1), -6px -6px 16px rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
 }
 
-.neumorphic:active {
+.neumorphic-pressed {
+  box-shadow: inset 6px 6px 16px rgba(0, 0, 0, 0.1), inset -6px -6px 16px rgba(255, 255, 255, 0.7);
+}
+
+.neumorphic:hover {
+  transform: scale(1.05);
+}
+
+.neumorphic:active, .neumorphic-pressed:active {
   transform: scale(0.95);
 }
 
@@ -80,4 +86,36 @@ input:focus, select:focus {
 
 button:hover {
   transform: scale(1.1);
+}
+
+.date-picker {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  padding: 20px;
+}
+
+.date-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.time-picker {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+}
+
+.time-hand {
+  position: absolute;
+  width: 2px;
+  height: 70px;
+  background: var(--accent);
+  top: 20px;
+  left: 50%;
+  transform-origin: bottom;
 }
