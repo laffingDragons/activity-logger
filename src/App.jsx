@@ -16,7 +16,7 @@ function App() {
 
   return (
     <div className="min-h-screen" style={{ fontSize }}>
-      <Router>
+      <Router basename="/activity-logger">
         <motion.header
           className="frosted-glass p-6 flex justify-between items-center"
           initial={{ y: -100 }}
