@@ -43,7 +43,7 @@ function CustomDatePicker({ selected, onChange, onClose }) {
           <motion.button
             key={day.toString()}
             onClick={() => setTempDate(day)}
-            className={`date-day ${isSameDay(day, tempDate) ? "neumorphic-pressed bg-[var(--accent)] text-white" : "neumorphic"}`}
+            className={`date-day ${isSameDay(day, tempDate) ? "neumorphic-pressed bg-[var(--accent)] text-purple-900" : "neumorphic"}`}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
@@ -55,14 +55,14 @@ function CustomDatePicker({ selected, onChange, onClose }) {
       <div className="flex gap-4 mt-6">
         <motion.button
           onClick={handleConfirm}
-          className="neumorphic p-3 flex-1 bg-[var(--accent)] text-white rounded-lg"
+          className="neumorphic p-3 flex-1 bg-[var(--accent)] text-purple-900 rounded-lg"
           whileTap={{ scale: 0.9 }}
         >
           OK
         </motion.button>
         <motion.button
           onClick={handleCancel}
-          className="neumorphic p-3 flex-1 bg-[var(--secondary)] text-white rounded-lg"
+          className="neumorphic p-3 flex-1 bg-[var(--secondary)] text-purple-900 rounded-lg"
           whileTap={{ scale: 0.9 }}
         >
           Cancel

@@ -10,7 +10,7 @@ import CustomTimePicker from "./CustomTimePicker";
 import { vibrate } from "../utils/haptic";
 
 function LogForm({ onLogAdded }) {
-  const { addLog } = useLogs();
+  const { addLog, logs } = useLogs(); // Add logs to the destructuring
   const { categories, addCategory, addSubcategory } = useCategories();
   const { startListening, transcript, isListening } = useVoice();
 
@@ -76,7 +76,7 @@ function LogForm({ onLogAdded }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
@@ -91,10 +91,10 @@ function LogForm({ onLogAdded }) {
       duration,
     };
 
-    addLog(log);
-    onLogAdded();
+    await addLog(log); // Wait for the log to be added
     vibrate(50);
     resetForm();
+    onLogAdded(log); // Pass the new log to the callback
   };
 
   const resetForm = () => {
@@ -153,7 +153,7 @@ function LogForm({ onLogAdded }) {
                 onClick={() => handleQuickSelect(activity)}
                 className={`neumorphic p-2 rounded-lg text-sm ${
                   category === activity.category && subcategory === activity.subcategory
-                    ? "neumorphic-pressed bg-[var(--accent)] text-white"
+                    ? "neumorphic-pressed bg-[var(--accent)] text-purple-900"
                     : ""
                 }`}
                 whileTap={{ scale: 0.9 }}
@@ -221,7 +221,7 @@ function LogForm({ onLogAdded }) {
           <motion.button
             type="button"
             onClick={handleAddCategory}
-            className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-white rounded-lg"
+            className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-purple-900 rounded-lg"
             whileTap={{ scale: 0.9 }}
           >
             Add Category
@@ -254,7 +254,7 @@ function LogForm({ onLogAdded }) {
           <motion.button
             type="button"
             onClick={handleAddSubcategory}
-            className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-white rounded-lg"
+            className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-purple-900 rounded-lg"
             whileTap={{ scale: 0.9 }}
           >
             Add Subcategory
@@ -344,7 +344,7 @@ function LogForm({ onLogAdded }) {
         <div className="flex gap-4">
           <motion.button
             type="submit"
-            className="neumorphic p-3 flex-1 bg-[var(--accent)] text-white rounded-lg"
+            className="neumorphic p-3 flex-1 bg-[var(--accent)] text-purple-900 rounded-lg"
             whileTap={{ scale: 0.9 }}
           >
             Log Activity
@@ -354,7 +354,7 @@ function LogForm({ onLogAdded }) {
             onClick={startListening}
             className={`neumorphic p-3 flex-1 ${
               isListening ? "neumorphic-pressed bg-red-500" : "bg-[var(--secondary)]"
-            } text-white rounded-lg`}
+            } text-purple-900 rounded-lg`}
             whileTap={{ scale: 0.9 }}
           >
             {isListening ? "Stop Voice" : "Voice Input"}

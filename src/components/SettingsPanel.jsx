@@ -57,7 +57,7 @@ function SettingsPanel({ onClose }) {
                   setFontSize(size);
                   vibrate(50);
                 }}
-                className={`neumorphic p-2 ${fontSize === size ? "bg-[var(--accent)] text-white" : ""}`}
+                className={`neumorphic p-2 ${fontSize === size ? "bg-[var(--accent)] text-purple-900" : ""}`}
                 whileTap={{ scale: 0.9 }}
               >
                 {size}
@@ -67,7 +67,7 @@ function SettingsPanel({ onClose }) {
         </div>
         <motion.button
           onClick={onClose}
-          className="neumorphic p-2 w-full bg-[var(--accent)] text-white"
+          className="neumorphic p-2 w-full bg-[var(--accent)] text-purple-900"
           whileTap={{ scale: 0.9 }}
         >
           Close

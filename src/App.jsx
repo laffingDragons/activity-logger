@@ -6,14 +6,28 @@ import MasterPage from "./pages/MasterPage";
 import SettingsPanel from "./components/SettingsPanel";
 import OnboardingTour from "./components/OnboardingTour";
 import { useTheme } from "./hooks/useTheme";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 
 function App() {
+  // Move all hooks to the top level
   const { theme, fontSize } = useTheme();
   const [showSettings, setShowSettings] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(!localStorage.getItem("onboardingCompleted"));
+  const [showOnboarding, setShowOnboarding] = useState(
+    !localStorage.getItem("onboardingCompleted")
+  );
 
+  // Use useCallback for handlers
+  const handleSettingsClose = useCallback(() => {
+    setShowSettings(false);
+  }, []);
+
+  const handleOnboardingComplete = useCallback(() => {
+    localStorage.setItem("onboardingCompleted", "true");
+    setShowOnboarding(false);
+  }, []);
+
+  // Always return the same structure
   return (
     <div className="min-h-screen" style={{ fontSize }}>
       <Router basename="/activity-logger">
@@ -36,15 +50,8 @@ function App() {
           <Route path="/" element={<LogPage />} />
           <Route path="/master" element={<MasterPage />} />
         </Routes>
-        {showSettings && (
-          <SettingsPanel onClose={() => setShowSettings(false)} />
-        )}
-        {showOnboarding && (
-          <OnboardingTour onComplete={() => {
-            localStorage.setItem("onboardingCompleted", "true");
-            setShowOnboarding(false);
-          }} />
-        )}
+        {showSettings && <SettingsPanel onClose={handleSettingsClose} />}
+        {showOnboarding && <OnboardingTour onComplete={handleOnboardingComplete} />}
         <ToastContainer position="bottom-center" autoClose={30000} />
       </Router>
     </div>

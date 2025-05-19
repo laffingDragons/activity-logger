@@ -60,7 +60,7 @@ function CategoryManager() {
         />
         <motion.button
           onClick={handleAddCategory}
-          className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-white"
+          className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-purple-900"
           whileTap={{ scale: 0.9 }}
         >
           Add Category
@@ -86,7 +86,7 @@ function CategoryManager() {
         />
         <motion.button
           onClick={handleAddSubcategory}
-          className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-white"
+          className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-purple-900"
           whileTap={{ scale: 0.9 }}
         >
           Add Subcategory
@@ -104,9 +104,10 @@ function CategoryManager() {
               <h3 className="font-bold">{cat.name}</h3>
               <button
                 onClick={() => handleDeleteCategory(cat)}
-                className="neumorphic p-1 bg-red-500 text-white rounded"
+                className="neumorphic p-1 bg-red-500 text-purple-900 rounded"
+                aria-label="Delete category"
               >
-                Delete
+                🗑️
               </button>
             </div>
             <ul className="ml-4">

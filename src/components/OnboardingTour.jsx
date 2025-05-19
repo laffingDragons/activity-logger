@@ -30,14 +30,14 @@ function OnboardingTour({ onComplete }) {
         <div className="flex gap-2">
           <motion.button
             onClick={onComplete}
-            className="neumorphic p-2 bg-gray-500 text-white"
+            className="neumorphic p-2 bg-gray-500 text-purple-900"
             whileTap={{ scale: 0.9 }}
           >
             Skip
           </motion.button>
           <motion.button
             onClick={handleNext}
-            className="neumorphic p-2 bg-[var(--accent)] text-white"
+            className="neumorphic p-2 bg-[var(--accent)] text-purple-900"
             whileTap={{ scale: 0.9 }}
           >
             {step === steps.length - 1 ? "Finish" : "Next"}
