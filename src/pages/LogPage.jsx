@@ -6,7 +6,6 @@ import ChartSelector from "../components/ChartSelector";
 import FrostedCard from "../components/FrostedCard";
 import { motion } from "framer-motion";
 import { useLogs } from "../hooks/useLogs";
-import { exportToCSV, importFromCSV } from "../utils/storage";
 import { useCategories } from "../hooks/useCategories";
 
 function LogPage() {
@@ -19,17 +18,23 @@ function LogPage() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  const handleExport = () => {
-    exportToCSV(logs, categories);
+  // Calculate today's stats
+  const getTodayStats = () => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1).toISOString().split('T')[0];
+    const todayLogs = logs.filter((log) => {
+      const logDate = new Date(log.date).toISOString().split('T')[0];
+      console.log(" >>>>>>", logDate, today);
+      return logDate === today;
+    });
+
+    return {
+      totalTime: todayLogs.reduce((sum, log) => sum + (parseInt(log.duration) || 0), 0),
+      count: todayLogs.length,
+    };
   };
 
-  const handleImport = (e) => {
-    const file = e.target.files[0];
-    importFromCSV(file, (data) => {
-      localStorage.setItem("logs", JSON.stringify(data));
-      window.location.reload();
-    });
-  };
+  const todayStats = getTodayStats();
 
   return (
     <motion.div
@@ -39,30 +44,8 @@ function LogPage() {
       transition={{ duration: 0.5 }}
     >
       <div>
-        <div className="flex gap-3 mb-6">
-          <Link
-            to="/master"
-            className="neumorphic p-2 bg-[var(--accent)] text-purple-900 rounded-lg text-sm"
-          >
-            Manage Categories
-          </Link>
-          <button
-            onClick={handleExport}
-            className="neumorphic p-2 bg-[var(--secondary)] text-purple-900 rounded-lg text-sm"
-          >
-            Export CSV
-          </button>
-          <label className="neumorphic p-2 bg-[var(--secondary)] text-purple-900 rounded-lg text-sm">
-            Import CSV
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleImport}
-              className="hidden"
-            />
-          </label>
-        </div>
         <div className="flex gap-6 mb-6">
+          {/* Weekly Stats card */}
           <FrostedCard className="flex-1">
             <h2 className="text-lg font-bold mb-3">Weekly Stats</h2>
             <motion.div
@@ -81,6 +64,8 @@ function LogPage() {
               </div>
             </motion.div>
           </FrostedCard>
+
+          {/* Today's Stats card */}
           <FrostedCard className="flex-1">
             <h2 className="text-lg font-bold mb-3">Today's Stats</h2>
             <motion.div
@@ -89,28 +74,17 @@ function LogPage() {
               transition={{ delay: 0.2 }}
             >
               <div className="flex-1 bg-green-100 p-3 rounded-lg">
-                {(() => {
-                  const today = new Date().toISOString().split("T")[0];
-                  const todayLogs = logs.filter((log) => log.date === today);
-                  const todayTotal = todayLogs.reduce(
-                    (sum, log) => sum + log.duration,
-                    0
-                  );
-                  return (
-                    <>
-                      <p className="text-sm text-green-800">
-                        Time: {todayTotal} min
-                      </p>
-                      <p className="text-sm text-green-800">
-                        Activities: {todayLogs.length}
-                      </p>
-                    </>
-                  );
-                })()}
+                <p className="text-sm font-medium text-green-800">
+                  Time: {todayStats.totalTime} min
+                </p>
+                <p className="text-sm font-medium text-green-800">
+                  Activities: {todayStats.count}
+                </p>
               </div>
             </motion.div>
           </FrostedCard>
         </div>
+
         <LogForm onLogAdded={handleLogAdded} />
       </div>
       <div>

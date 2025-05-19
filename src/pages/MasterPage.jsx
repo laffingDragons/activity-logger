@@ -93,17 +93,17 @@ function MasterPage() {
 
       <FrostedCard className="mb-6">
         <h2 className="text-lg font-bold mb-4">Add New Category</h2>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <input
             type="text"
             placeholder="New Category"
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
-            className="neumorphic p-3 flex-1 rounded-lg"
+            className="neumorphic p-3 w-full sm:flex-1 rounded-lg"
           />
           <motion.button
             onClick={handleAddCategory}
-            className="neumorphic p-3 bg-[var(--accent)] text-green-900 rounded-lg"
+            className="neumorphic p-3 w-full sm:w-auto bg-[var(--accent)] text-green-900 rounded-lg"
             whileTap={{ scale: 0.9 }}
           >
             Add
@@ -113,11 +113,11 @@ function MasterPage() {
 
       <FrostedCard className="mb-6">
         <h2 className="text-lg font-bold mb-4">Add New Subcategory</h2>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="neumorphic p-3 flex-1 rounded-lg"
+            className="neumorphic p-3 w-full sm:flex-1 rounded-lg"
           >
             <option value="">Select Category</option>
             {categories.map((cat) => (
@@ -131,11 +131,11 @@ function MasterPage() {
             placeholder="New Subcategory"
             value={newSubcategory}
             onChange={(e) => setNewSubcategory(e.target.value)}
-            className="neumorphic p-3 flex-1 rounded-lg"
+            className="neumorphic p-3 w-full sm:flex-1 rounded-lg"
           />
           <motion.button
             onClick={handleAddSubcategory}
-            className="neumorphic p-3 bg-[var(--accent)] text-green-900 rounded-lg"
+            className="neumorphic p-3 w-full sm:w-auto bg-[var(--accent)] text-green-900 rounded-lg"
             whileTap={{ scale: 0.9 }}
           >
             Add
