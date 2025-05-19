@@ -24,7 +24,6 @@ function LogPage() {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1).toISOString().split('T')[0];
     const todayLogs = logs.filter((log) => {
       const logDate = new Date(log.date).toISOString().split('T')[0];
-      console.log(" >>>>>>", logDate, today);
       return logDate === today;
     });
 

@@ -45,6 +45,34 @@ function SettingsPanel({ onClose }) {
     }
   };
 
+  const handleDeleteAllData = () => {
+    const shouldExport = window.confirm(
+      "⚠️ Would you like to export your data before deleting? Click 'OK' to export first, or 'Cancel' to continue with deletion."
+    );
+
+    if (shouldExport) {
+      exportToCSV(logs, categories);
+      // Show second confirmation after export
+      setTimeout(() => {
+        confirmAndDelete();
+      }, 1000);
+    } else {
+      confirmAndDelete();
+    }
+  };
+
+  const confirmAndDelete = () => {
+    const confirmed = window.confirm(
+      "⚠️ Are you absolutely sure? This will permanently delete all your logs and categories. This action cannot be undone!"
+    );
+
+    if (confirmed) {
+      localStorage.clear();
+      vibrate([100, 50, 100]); // Longer vibration pattern for destructive action
+      window.location.reload();
+    }
+  };
+
   return (
     <motion.div
       className="fixed inset-0 frosted-glass flex items-center justify-center z-50"
@@ -116,6 +144,20 @@ function SettingsPanel({ onClose }) {
               </motion.button>
             ))}
           </div>
+        </div>
+
+        <div className="mb-6">
+          <h3 className="text-md font-semibold mb-2">Danger Zone</h3>
+          <motion.button
+            onClick={handleDeleteAllData}
+            className="neumorphic p-2 w-full bg-red-500 text-white font-medium mb-4"
+            whileTap={{ scale: 0.95 }}
+          >
+            🗑️ Delete All Data
+          </motion.button>
+          <p className="text-xs text-gray-600">
+            This will permanently delete all your logs and categories. Make sure to export your data first if you want to keep a backup.
+          </p>
         </div>
 
         <motion.button
