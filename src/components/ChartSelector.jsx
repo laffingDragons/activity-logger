@@ -73,6 +73,7 @@ function ChartSelector() {
           className="neumorphic p-2 rounded"
         >
           <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
           <option value="week">Week</option>
           <option value="month">Month</option>
         </select>

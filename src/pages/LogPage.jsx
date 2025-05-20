@@ -90,18 +90,16 @@ function LogPage() {
         <LogForm onLogAdded={handleLogAdded} />
       </div>
       <div>
-        <FrostedCard className="mb-6">
           <ChartSelector 
             onChartTypeChange={setChartType}
             onTimeFilterChange={setTimeFilter}
           />
-          <div className="mt-4">
+          {/* <div className="mt-4">
             <ActivityChart 
               chartType={chartType}
               timeFilter={timeFilter}
             />
-          </div>
-        </FrostedCard>
+          </div> */}
         <LogTable key={refreshKey} />
       </div>
     </motion.div>

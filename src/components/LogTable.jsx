@@ -13,15 +13,18 @@ function LogTable() {
   const tableRef = useRef(null);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const [timeFilter, setTimeFilter] = useState('all');
-
-  const getFilteredLogs = () => {
+  const [timeFilter, setTimeFilter] = useState('all');    const getFilteredLogs = () => {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1).toISOString().split('T')[0];
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().split('T')[0];
     
     switch (timeFilter) {
       case 'today':
         return logs.filter(log => log.date === today);
+      case 'yesterday':
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() );
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        return logs.filter(log => log.date === yesterdayStr);
       case 'week':
         const weekAgo = new Date(now.setDate(now.getDate() - 7));
         return logs.filter(log => new Date(log.date) >= weekAgo);
@@ -82,7 +85,7 @@ function LogTable() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">Logged Activities</h2>
         <div className="flex gap-2">
-          {['all', 'today', 'week', 'month'].map((filter) => (
+          {['all', 'today', 'yesterday', 'week', 'month'].map((filter) => (
             <motion.button
               key={filter}
               onClick={() => setTimeFilter(filter)}
@@ -157,33 +160,25 @@ function LogTable() {
                             className="neumorphic p-1 rounded"
                           />
                         </td>
-                        <td className="p-4">
-                          <div className="flex items-center space-x-4 bg-white/10 p-3 rounded-lg shadow-inner">
-                            <div className="flex flex-col">
-                              <label className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">Start</label>
-                              <input
-                                type="time"
-                                value={editForm.startTime}
-                                onChange={(e) =>
-                                  setEditForm({ ...editForm, startTime: e.target.value })
-                                }
-                                className="neumorphic px-4 py-3 rounded-lg text-xl w-40 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
-                              />
-                            </div>
-                            <div className="flex items-center h-full pt-8">
-                              <span className="text-lg font-medium text-gray-400">→</span>
-                            </div>
-                            <div className="flex flex-col">
-                              <label className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">End</label>
-                              <input
-                                type="time"
-                                value={editForm.endTime}
-                                onChange={(e) =>
-                                  setEditForm({ ...editForm, endTime: e.target.value })
-                                }
-                                className="neumorphic px-4 py-3 rounded-lg text-xl w-40 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
-                              />
-                            </div>
+                        <td className="p-2">
+                          <div className="inline-flex items-center gap-2 bg-white/5 p-2 rounded-lg shadow-inner">
+                            <input
+                              type="time"
+                              value={editForm.startTime}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, startTime: e.target.value })
+                              }
+                              className="neumorphic px-3 py-2 rounded-lg text-base w-32 focus:ring-2 focus:ring-blue-500 focus:outline-none hover:bg-white/5"
+                            />
+                            <span className="text-gray-400 font-medium">→</span>
+                            <input
+                              type="time"
+                              value={editForm.endTime}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, endTime: e.target.value })
+                              }
+                              className="neumorphic px-3 py-2 rounded-lg text-base w-32 focus:ring-2 focus:ring-blue-500 focus:outline-none hover:bg-white/5"
+                            />
                           </div>
                         </td>
                         <td className="p-2">{editForm.duration} min</td>

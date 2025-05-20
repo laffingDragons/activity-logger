@@ -259,8 +259,8 @@ function LogForm({ onLogAdded }) {
               </select>
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+          <div className="mt-4 flex flex-row gap-4">
+            <div className="flex-1">
               <input
                 type="text"
                 placeholder="New Category"
@@ -277,7 +277,7 @@ function LogForm({ onLogAdded }) {
                 Add Category
               </motion.button>
             </div>
-            <div>
+            <div className="flex-1">
               <input
                 type="text"
                 placeholder="New Subcategory"
@@ -297,15 +297,49 @@ function LogForm({ onLogAdded }) {
           </div>
         </div>
         <div className="mb-6">
-          <label className="block text-sm mb-2">Start Time</label>
-          <motion.button
-            type="button"
-            onClick={() => setShowStartTimePicker(true)}
-            className="neumorphic p-3 w-full rounded-lg text-left"
-            whileTap={{ scale: 0.9 }}
-          >
-            {startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-          </motion.button>
+          <label className="block text-sm mb-2">Time Range</label>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <motion.button
+                type="button"
+                onClick={() => setShowStartTimePicker(true)}
+                className="neumorphic p-3 w-full rounded-lg text-left"
+                whileTap={{ scale: 0.9 }}
+              >
+                <div className="text-xs text-gray-500 mb-1">Start</div>
+                {startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </motion.button>
+              {errors.startTime && (
+                <motion.p
+                  className="text-red-500 text-xs mt-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  {errors.startTime}
+                </motion.p>
+              )}
+            </div>
+            <div>
+              <motion.button
+                type="button"
+                onClick={() => setShowEndTimePicker(true)}
+                className="neumorphic p-3 w-full rounded-lg text-left"
+                whileTap={{ scale: 0.9 }}
+              >
+                <div className="text-xs text-gray-500 mb-1">End</div>
+                {endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </motion.button>
+              {errors.endTime && (
+                <motion.p
+                  className="text-red-500 text-xs mt-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  {errors.endTime}
+                </motion.p>
+              )}
+            </div>
+          </div>
           {showStartTimePicker && (
             <motion.div
               className="fixed inset-0 frosted-glass flex items-center justify-center z-50"
@@ -320,26 +354,6 @@ function LogForm({ onLogAdded }) {
               />
             </motion.div>
           )}
-          {errors.startTime && (
-            <motion.p
-              className="text-red-500 text-xs mt-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              {errors.startTime}
-            </motion.p>
-          )}
-        </div>
-        <div className="mb-6">
-          <label className="block text-sm mb-2">End Time</label>
-          <motion.button
-            type="button"
-            onClick={() => setShowEndTimePicker(true)}
-            className="neumorphic p-3 w-full rounded-lg text-left"
-            whileTap={{ scale: 0.9 }}
-          >
-            {endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-          </motion.button>
           {showEndTimePicker && (
             <motion.div
               className="fixed inset-0 frosted-glass flex items-center justify-center z-50"
@@ -354,22 +368,13 @@ function LogForm({ onLogAdded }) {
               />
             </motion.div>
           )}
-          {errors.endTime && (
-            <motion.p
-              className="text-red-500 text-xs mt-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              {errors.endTime}
-            </motion.p>
-          )}
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 mt-4">
             {[15, 30, 60].map((minutes) => (
               <motion.button
                 key={minutes}
                 type="button"
                 onClick={() => handleDurationSelect(minutes)}
-                className="neumorphic p-2 rounded-lg text-sm"
+                className="neumorphic p-2 rounded-lg text-sm flex-1"
                 whileTap={{ scale: 0.9 }}
               >
                 {minutes} min
