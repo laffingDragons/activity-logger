@@ -25,10 +25,30 @@ export function useLogs() {
   };
 
   const updateLog = (id, updatedLog) => {
-    const updatedLogs = logs.map((log) =>
-      log.id === id ? { ...log, ...updatedLog } : log
-    );
+    const updatedLogs = logs.map((log) => {
+      if (log.id === id) {
+        // Ensure all required fields are present
+        const finalLog = {
+          ...log,
+          ...updatedLog,
+          id: log.id, // Preserve the original ID
+          date: updatedLog.date || log.date,
+          category: updatedLog.category || log.category,
+          subcategory: updatedLog.subcategory || log.subcategory,
+          startTime: updatedLog.startTime || log.startTime,
+          endTime: updatedLog.endTime || log.endTime,
+          duration: updatedLog.duration || log.duration,
+          lastModified: new Date().toISOString() // Add modification timestamp
+        };
+        return finalLog;
+      }
+      return log;
+    });
+    
     persistLogs(updatedLogs);
+    
+    // Return the updated log for potential use
+    return updatedLogs.find(log => log.id === id);
   };
 
   const deleteLog = (id) => {

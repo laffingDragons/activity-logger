@@ -43,7 +43,18 @@ function LogTable() {
   };
 
   const handleSave = () => {
-    updateLog(editingId, editForm);
+    // Calculate the new duration based on start and end times
+    const startDate = new Date(`2000-01-01T${editForm.startTime}`);
+    const endDate = new Date(`2000-01-01T${editForm.endTime}`);
+    const durationInMinutes = Math.round((endDate - startDate) / (1000 * 60));
+
+    // Update all fields including the recalculated duration
+    const updatedLog = {
+      ...editForm,
+      duration: durationInMinutes >= 0 ? durationInMinutes : 0
+    };
+
+    updateLog(editingId, updatedLog);
     setEditingId(null);
     vibrate(50);
   };
@@ -82,14 +93,14 @@ function LogTable() {
 
   return (
     <FrostedCard>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <h2 className="text-lg font-bold">Logged Activities</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {['all', 'today', 'yesterday', 'week', 'month'].map((filter) => (
             <motion.button
               key={filter}
               onClick={() => setTimeFilter(filter)}
-              className={`neumorphic px-3 py-1 rounded-lg text-sm ${
+              className={`neumorphic px-2 py-1 rounded-lg text-xs sm:text-sm flex-1 sm:flex-none min-w-[60px] ${
                 timeFilter === filter ? 'bg-[var(--accent)] text-purple-900' : ''
               }`}
               whileTap={{ scale: 0.95 }}
