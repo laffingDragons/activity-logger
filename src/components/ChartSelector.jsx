@@ -11,6 +11,15 @@ function ChartSelector() {
   const { logs } = useLogs();
   const [chartType, setChartType] = useState("Pie");
   const [filter, setFilter] = useState("category");
+  const [timeFilter, setTimeFilter] = useState("today");
+
+  const handleChartChange = (type) => {
+    setChartType(type);
+  };
+
+  const handleTimeFilterChange = (filter) => {
+    setTimeFilter(filter);
+  };
 
   const chartData = {
     labels: [...new Set(logs.map((log) => log[filter]))],
@@ -59,8 +68,17 @@ function ChartSelector() {
       <h2 className="text-lg font-bold mb-4">Activity Insights</h2>
       <div className="flex gap-2 mb-4">
         <select
+          value={timeFilter}
+          onChange={(e) => handleTimeFilterChange(e.target.value)}
+          className="neumorphic p-2 rounded"
+        >
+          <option value="today">Today</option>
+          <option value="week">Week</option>
+          <option value="month">Month</option>
+        </select>
+        <select
           value={chartType}
-          onChange={(e) => setChartType(e.target.value)}
+          onChange={(e) => handleChartChange(e.target.value)}
           className="neumorphic p-2 rounded"
         >
           <option value="Pie">Pie</option>

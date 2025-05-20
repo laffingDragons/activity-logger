@@ -2,10 +2,28 @@ import { useEffect, useRef, useState } from 'react';
 import { useLogs } from '../hooks/useLogs';
 import Chart from 'chart.js/auto';
 
-function ActivityChart() {
+function ActivityChart({ chartType = 'category', timeFilter = 'today' }) {
   const { logs } = useLogs();
   const chartRef = useRef(null);
   const [chart, setChart] = useState(null);
+
+  const getFilteredLogs = () => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().split('T')[0];
+    
+    switch (timeFilter) {
+      case 'today':
+        return logs.filter(log => log.date === today);
+      case 'week':
+        const weekAgo = new Date(now.setDate(now.getDate() - 7));
+        return logs.filter(log => new Date(log.date) >= weekAgo);
+      case 'month':
+        const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+        return logs.filter(log => new Date(log.date) >= monthAgo);
+      default:
+        return logs;
+    }
+  };
 
   const pastelColors = [
     'rgba(240, 248, 255, 0.7)',  // alice blue
@@ -18,35 +36,87 @@ function ActivityChart() {
     'rgba(255, 240, 245, 0.7)',  // lavender blush
     'rgba(173, 216, 230, 0.7)',  // light blue
     'rgba(152, 251, 152, 0.7)',  // pale green
-    'rgba(255, 182, 193, 0.7)',  // pink
-    'rgba(135, 206, 235, 0.7)',  // sky blue
-    'rgba(255, 228, 196, 0.7)',  // bisque
-    'rgba(216, 191, 216, 0.7)',  // thistle
-    'rgba(176, 196, 222, 0.7)',  // light steel blue
-    'rgba(240, 255, 240, 0.7)',  // honeydew
-    'rgba(245, 255, 250, 0.7)',  // mint cream
-    'rgba(255, 250, 205, 0.7)',  // lemon chiffon
-    'rgba(250, 235, 215, 0.7)',  // antique white
-    'rgba(255, 239, 213, 0.7)'   // papaya whip
   ];
+
+  const processData = (chartType, filteredLogs) => {
+    switch (chartType) {
+      case 'category':
+        return processCategories(filteredLogs);
+      case 'timeline':
+        return processTimeline(filteredLogs);
+      case 'breakdown':
+        return processBreakdown(filteredLogs);
+      default:
+        return processCategories(filteredLogs);
+    }
+  };
+
+  const processCategories = (filteredLogs) => {
+    const data = filteredLogs.reduce((acc, log) => {
+      if (!log.category || !log.duration) return acc;
+      if (!acc[log.category]) acc[log.category] = 0;
+      acc[log.category] += parseFloat(log.duration) / 60; // Convert to hours
+      return acc;
+    }, {});
+
+    return {
+      labels: Object.keys(data),
+      datasets: [{
+        data: Object.values(data),
+        backgroundColor: pastelColors.slice(0, Object.keys(data).length),
+        borderColor: pastelColors.slice(0, Object.keys(data).length).map(color => color.replace('0.7', '1')),
+        borderWidth: 1
+      }]
+    };
+  };
+
+  const processTimeline = (filteredLogs) => {
+    const timeData = filteredLogs.reduce((acc, log) => {
+      const date = log.date;
+      if (!acc[date]) acc[date] = 0;
+      acc[date] += parseFloat(log.duration) / 60; // Convert to hours
+      return acc;
+    }, {});
+
+    return {
+      labels: Object.keys(timeData).sort(),
+      datasets: [{
+        label: 'Hours Spent',
+        data: Object.keys(timeData).sort().map(date => timeData[date]),
+        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.4,
+        fill: true
+      }]
+    };
+  };
+
+  const processBreakdown = (filteredLogs) => {
+    const data = filteredLogs.reduce((acc, log) => {
+      if (!log.category || !log.subcategory || !log.duration) return acc;
+      const key = `${log.category} - ${log.subcategory}`;
+      if (!acc[key]) acc[key] = 0;
+      acc[key] += parseFloat(log.duration) / 60; // Convert to hours
+      return acc;
+    }, {});
+
+    return {
+      labels: Object.keys(data),
+      datasets: [{
+        data: Object.values(data),
+        backgroundColor: pastelColors.slice(0, Object.keys(data).length),
+        borderColor: pastelColors.slice(0, Object.keys(data).length).map(color => color.replace('0.7', '1')),
+        borderWidth: 1
+      }]
+    };
+  };
 
   useEffect(() => {
     if (!chartRef.current) return;
 
     const updateChart = () => {
-      // Process data
-      const categoryData = logs.reduce((acc, log) => {
-        if (!log.category || !log.duration) return acc;
-        const category = log.category;
-        if (!acc[category]) {
-          acc[category] = 0;
-        }
-        acc[category] += parseFloat(log.duration);
-        return acc;
-      }, {});
-
-      // Don't create/update chart if no data
-      if (Object.keys(categoryData).length === 0) {
+      const filteredLogs = getFilteredLogs();
+      if (filteredLogs.length === 0) {
         if (chart) {
           chart.destroy();
           setChart(null);
@@ -54,17 +124,10 @@ function ActivityChart() {
         return;
       }
 
-      const chartConfig = {
-        type: 'doughnut',
-        data: {
-          labels: Object.keys(categoryData),
-          datasets: [{
-            data: Object.values(categoryData),
-            backgroundColor: pastelColors.slice(0, Object.keys(categoryData).length),
-            borderColor: pastelColors.slice(0, Object.keys(categoryData).length).map(color => color.replace('0.7', '1')),
-            borderWidth: 1
-          }]
-        },
+      const data = processData(chartType, filteredLogs);
+      const config = {
+        type: chartType === 'timeline' ? 'line' : 'doughnut',
+        data,
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -73,49 +136,66 @@ function ActivityChart() {
               position: 'bottom',
               labels: {
                 padding: 20,
-                font: {
-                  size: 12
-                }
+                font: { size: 12 }
               }
             },
             title: {
               display: true,
-              text: 'Activity Distribution',
-              font: {
-                size: 16
+              text: `Activity ${chartType === 'timeline' ? 'Timeline' : 
+                    chartType === 'breakdown' ? 'Breakdown' : 
+                    'Distribution'} (${timeFilter})`,
+              font: { size: 16 }
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const value = context.raw;
+                  return ` ${value.toFixed(1)} hours`;
+                }
               }
             }
-          }
+          },
+          ...(chartType === 'timeline' && {
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Hours'
+                }
+              }
+            }
+          })
         }
       };
 
       if (chart) {
-        // Update existing chart
-        chart.data = chartConfig.data;
-        chart.options = chartConfig.options;
+        chart.data = config.data;
+        chart.options = config.options;
+        chart.config.type = config.type;
         chart.update('none');
       } else {
-        // Create new chart
-        const newChart = new Chart(chartRef.current, chartConfig);
+        const newChart = new Chart(chartRef.current, config);
         setChart(newChart);
       }
     };
 
-    // Update the chart whenever logs change
     updateChart();
 
-    // Cleanup function
     return () => {
       if (chart) {
         chart.destroy();
         setChart(null);
       }
     };
-  }, [logs, chart]); // Include both logs and chart in dependencies
+  }, [logs, chart, chartType, timeFilter]);
 
-  // Don't render anything if no valid data
   if (!logs || logs.length === 0) {
-    return null;
+    return (
+      <div className="w-full h-full min-h-[300px] p-4 flex items-center justify-center text-gray-500">
+        No activity data available
+      </div>
+    );
   }
 
   return (

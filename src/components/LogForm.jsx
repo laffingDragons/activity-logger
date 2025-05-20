@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { format, addMinutes } from "date-fns";
 import { useLogs } from "../hooks/useLogs";
 import { useCategories } from "../hooks/useCategories";
+import AutocompleteInput from "./AutocompleteInput";
 import { useVoice } from "../hooks/useVoice";
 import FrostedCard from "./FrostedCard";
 import CustomDatePicker from "./CustomDatePicker";
@@ -10,7 +11,7 @@ import CustomTimePicker from "./CustomTimePicker";
 import { vibrate } from "../utils/haptic";
 
 function LogForm({ onLogAdded }) {
-  const { addLog, logs } = useLogs(); // Add logs to the destructuring
+  const { addLog, logs } = useLogs();
   const { categories, addCategory, addSubcategory } = useCategories();
   const { startListening, transcript, isListening } = useVoice();
 
@@ -95,6 +96,12 @@ function LogForm({ onLogAdded }) {
     vibrate(50);
     resetForm();
     onLogAdded(log); // Pass the new log to the callback
+
+    // Scroll to the logs table
+    const tableElement = document.querySelector('.logged-activities');
+    if (tableElement) {
+      tableElement.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const resetForm = () => {
@@ -122,14 +129,24 @@ function LogForm({ onLogAdded }) {
     }
   };
 
-  // Ensure quick-select buttons use default categories
-  const quickSelectActivities = [
-    { category: "Eat", subcategory: "Breakfast" },
-    { category: "Workout", subcategory: "Cardio" },
-    { category: "Study", subcategory: "Reading" },
-    { category: "Work", subcategory: "Meetings" },
-    { category: "Leisure", subcategory: "TV/Movies" },
-  ];
+  // Get top 5 most tracked activities
+  const getTopActivities = () => {
+    const activityCount = logs.reduce((acc, log) => {
+      const key = `${log.category}-${log.subcategory}`;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(activityCount)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([key]) => {
+        const [category, subcategory] = key.split('-');
+        return { category, subcategory };
+      });
+  };
+
+  const quickSelectActivities = getTopActivities();
 
   const handleQuickSelect = (activity) => {
     setCategory(activity.category);
@@ -144,23 +161,33 @@ function LogForm({ onLogAdded }) {
     <FrostedCard className="mb-6">
       <form onSubmit={handleSubmit}>
         <div className="mb-6">
-          <label className="block text-sm mb-2">Quick Select</label>
+          <h3 className="text-sm font-semibold mb-2">Most Used Activities</h3>
           <div className="flex flex-wrap gap-2">
-            {quickSelectActivities.map((activity) => (
-              <motion.button
-                key={`${activity.category}-${activity.subcategory}`}
-                type="button"
-                onClick={() => handleQuickSelect(activity)}
-                className={`neumorphic p-2 rounded-lg text-sm ${
-                  category === activity.category && subcategory === activity.subcategory
-                    ? "neumorphic-pressed bg-[var(--accent)] text-purple-900"
-                    : ""
-                }`}
-                whileTap={{ scale: 0.9 }}
-              >
-                {activity.category} - {activity.subcategory}
-              </motion.button>
-            ))}
+            {quickSelectActivities.map((activity) => {
+              const count = logs.filter(
+                log => log.category === activity.category && 
+                      log.subcategory === activity.subcategory
+              ).length;
+              
+              return (
+                <motion.button
+                  key={`${activity.category}-${activity.subcategory}`}
+                  type="button"
+                  onClick={() => handleQuickSelect(activity)}
+                  className={`neumorphic p-2 rounded-lg text-sm flex items-center gap-2 ${
+                    category === activity.category && subcategory === activity.subcategory
+                      ? "neumorphic-pressed bg-[var(--accent)] text-purple-900"
+                      : ""
+                  }`}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <span>{activity.category} - {activity.subcategory}</span>
+                  <span className="text-xs bg-[var(--accent)] px-2 py-1 rounded-full">
+                    {count}
+                  </span>
+                </motion.button>
+              );
+            })}
           </div>
         </div>
         <div className="mb-6">
@@ -189,76 +216,85 @@ function LogForm({ onLogAdded }) {
           )}
         </div>
         <div className="mb-6">
-          <label className="block text-sm mb-2">Category</label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="neumorphic p-3 w-full rounded-lg"
-          >
-            <option value="">Select Category</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.name}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-          {errors.category && (
-            <motion.p
-              className="text-red-500 text-xs mt-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              {errors.category}
-            </motion.p>
-          )}
-          <input
-            type="text"
-            placeholder="New Category"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            className="neumorphic p-3 w-full mt-2 rounded-lg"
-          />
-          <motion.button
-            type="button"
-            onClick={handleAddCategory}
-            className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-purple-900 rounded-lg"
-            whileTap={{ scale: 0.9 }}
-          >
-            Add Category
-          </motion.button>
-        </div>
-        <div className="mb-6">
-          <label className="block text-sm mb-2">Subcategory</label>
-          <select
-            value={subcategory}
-            onChange={(e) => setSubcategory(e.target.value)}
-            className="neumorphic p-3 w-full rounded-lg"
-          >
-            <option value="None">None</option>
-            {category &&
-              categories
-                .find((cat) => cat.name === category)
-                ?.subcategories.map((sub) => (
-                  <option key={sub.id} value={sub.name}>
-                    {sub.name}
+          <label className="block text-sm mb-2">Activity</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="neumorphic p-3 w-full rounded-lg"
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
                   </option>
                 ))}
-          </select>
-          <input
-            type="text"
-            placeholder="New Subcategory"
-            value={newSubcategory}
-            onChange={(e) => setNewSubcategory(e.target.value)}
-            className="neumorphic p-3 w-full mt-2 rounded-lg"
-          />
-          <motion.button
-            type="button"
-            onClick={handleAddSubcategory}
-            className="neumorphic p-2 mt-2 w-full bg-[var(--accent)] text-purple-900 rounded-lg"
-            whileTap={{ scale: 0.9 }}
-          >
-            Add Subcategory
-          </motion.button>
+              </select>
+              {errors.category && (
+                <motion.p
+                  className="text-red-500 text-xs mt-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  {errors.category}
+                </motion.p>
+              )}
+            </div>
+            <div>
+              <select
+                value={subcategory}
+                onChange={(e) => setSubcategory(e.target.value)}
+                className="neumorphic p-3 w-full rounded-lg"
+              >
+                <option value="None">None</option>
+                {category &&
+                  categories
+                    .find((cat) => cat.name === category)
+                    ?.subcategories.map((sub) => (
+                      <option key={sub.id} value={sub.name}>
+                        {sub.name}
+                      </option>
+                    ))}
+              </select>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <input
+                type="text"
+                placeholder="New Category"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                className="neumorphic p-3 w-full rounded-lg mb-2"
+              />
+              <motion.button
+                type="button"
+                onClick={handleAddCategory}
+                className="neumorphic p-2 w-full bg-[var(--accent)] text-purple-900 rounded-lg"
+                whileTap={{ scale: 0.9 }}
+              >
+                Add Category
+              </motion.button>
+            </div>
+            <div>
+              <input
+                type="text"
+                placeholder="New Subcategory"
+                value={newSubcategory}
+                onChange={(e) => setNewSubcategory(e.target.value)}
+                className="neumorphic p-3 w-full rounded-lg mb-2"
+              />
+              <motion.button
+                type="button"
+                onClick={handleAddSubcategory}
+                className="neumorphic p-2 w-full bg-[var(--accent)] text-purple-900 rounded-lg"
+                whileTap={{ scale: 0.9 }}
+              >
+                Add Subcategory
+              </motion.button>
+            </div>
+          </div>
         </div>
         <div className="mb-6">
           <label className="block text-sm mb-2">Start Time</label>
@@ -344,8 +380,10 @@ function LogForm({ onLogAdded }) {
         <div className="flex gap-4">
           <motion.button
             type="submit"
-            className="neumorphic p-3 flex-1 bg-[var(--accent)] text-purple-900 rounded-lg"
-            whileTap={{ scale: 0.9 }}
+            className="neumorphic p-3 flex-1 bg-[var(--accent)] text-purple-900 rounded-lg hover:shadow-lg transition-all duration-200"
+            whileTap={{ scale: 0.9, backgroundColor: "var(--secondary)" }}
+            initial={{ scale: 1 }}
+            animate={{ scale: 1 }}
           >
             Log Activity
           </motion.button>

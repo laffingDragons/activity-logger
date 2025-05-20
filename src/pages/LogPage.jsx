@@ -3,6 +3,7 @@ import { useState } from "react";
 import LogForm from "../components/LogForm";
 import LogTable from "../components/LogTable";
 import ChartSelector from "../components/ChartSelector";
+import ActivityChart from "../components/ActivityChart";
 import FrostedCard from "../components/FrostedCard";
 import { motion } from "framer-motion";
 import { useLogs } from "../hooks/useLogs";
@@ -12,6 +13,8 @@ function LogPage() {
   const { logs } = useLogs();
   const { categories } = useCategories();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [chartType, setChartType] = useState('category');
+  const [timeFilter, setTimeFilter] = useState('today');
 
   const handleLogAdded = (newLog) => {
     // Force a re-render of LogTable
@@ -56,7 +59,7 @@ function LogPage() {
                 <div className="flex-1">
                   <p className="text-sm">
                     Total Time:{" "}
-                    {logs.reduce((sum, log) => sum + log.duration, 0)} min
+                    {(logs.reduce((sum, log) => sum + log.duration, 0) / 60).toFixed(1)} hours
                   </p>
                   <p className="text-sm">Activities: {logs.length}</p>
                 </div>
@@ -74,7 +77,7 @@ function LogPage() {
             >
               <div className="flex-1 bg-green-100 p-3 rounded-lg">
                 <p className="text-sm font-medium text-green-800">
-                  Time: {todayStats.totalTime} min
+                  Time: {(todayStats.totalTime / 60).toFixed(1)} hours
                 </p>
                 <p className="text-sm font-medium text-green-800">
                   Activities: {todayStats.count}
@@ -87,7 +90,18 @@ function LogPage() {
         <LogForm onLogAdded={handleLogAdded} />
       </div>
       <div>
-        <ChartSelector />
+        <FrostedCard className="mb-6">
+          <ChartSelector 
+            onChartTypeChange={setChartType}
+            onTimeFilterChange={setTimeFilter}
+          />
+          <div className="mt-4">
+            <ActivityChart 
+              chartType={chartType}
+              timeFilter={timeFilter}
+            />
+          </div>
+        </FrostedCard>
         <LogTable key={refreshKey} />
       </div>
     </motion.div>
