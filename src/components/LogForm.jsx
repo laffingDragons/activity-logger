@@ -368,13 +368,13 @@ function LogForm({ onLogAdded }) {
               />
             </motion.div>
           )}
-          <div className="flex gap-2 mt-4">
-            {[15, 30, 60].map((minutes) => (
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4">
+            {[5, 10, 15, 30, 45, 60].map((minutes) => (
               <motion.button
                 key={minutes}
                 type="button"
                 onClick={() => handleDurationSelect(minutes)}
-                className="neumorphic p-2 rounded-lg text-sm flex-1"
+                className="neumorphic p-2 rounded-lg text-xs sm:text-sm"
                 whileTap={{ scale: 0.9 }}
               >
                 {minutes} min
