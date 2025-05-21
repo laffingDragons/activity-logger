@@ -17,7 +17,9 @@ function LogTable() {
 
   const getFilteredLogs = () => {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().split('T')[0];
+    // Set hours, minutes, seconds to 0 for accurate date comparison
+    now.setHours(0, 0, 0, 0);
+    const today = new Date().toISOString().split('T')[0];
     
     // Helper function to determine if an activity spans to the next day
     const spansNextDay = (log) => {
@@ -26,73 +28,96 @@ function LogTable() {
       return endDateTime < startDateTime;
     };
 
+    // Helper function to check if activity is on a given date
+    const isOnDate = (log, dateStr) => {
+      return log.date === dateStr;
+    };
+    
     // Helper function to check if activity overlaps with a given date
     const overlapsWithDate = (log, dateStr) => {
+      // Activity is directly on this date
+      console.log(" >>>>>;", log.date, dateStr);
+      if (log.date === dateStr) {
+        return true;
+      }
+      
+      // Activity is from the previous day and spans to this date
       const logDate = new Date(log.date);
       const targetDate = new Date(dateStr);
       
-      if (logDate.getTime() === targetDate.getTime()) {
-        return true;
-      }
-
       if (spansNextDay(log)) {
         const nextDay = new Date(logDate);
         nextDay.setDate(nextDay.getDate() + 1);
-        return nextDay.getTime() === targetDate.getTime();
+        nextDay.setHours(0, 0, 0, 0);
+        
+        // If the activity spans to the next day and that next day is our target date
+        return nextDay.toISOString().split('T')[0] === dateStr;
       }
-
+      
       return false;
     };
     
     switch (timeFilter) {
       case 'today':
         return logs.filter(log => {
-          const yesterday = new Date(now);
-          yesterday.setDate(yesterday.getDate() - 1);
-          const yesterdayStr = yesterday.toISOString().split('T')[0];
-          
-          return overlapsWithDate(log, today) || 
-                 (overlapsWithDate(log, yesterdayStr) && spansNextDay(log));
+          return overlapsWithDate(log, today);
         });
 
       case 'yesterday':
         const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setDate(yesterday.getDate());
         const yesterdayStr = yesterday.toISOString().split('T')[0];
         
-        const dayBeforeYesterday = new Date(yesterday);
-        dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1);
-        const dayBeforeYesterdayStr = dayBeforeYesterday.toISOString().split('T')[0];
-        
         return logs.filter(log => {
-          return overlapsWithDate(log, yesterdayStr) || 
-                 (overlapsWithDate(log, dayBeforeYesterdayStr) && spansNextDay(log));
+          return overlapsWithDate(log, yesterdayStr);
         });
 
       case 'week':
         const weekAgo = new Date(now);
         weekAgo.setDate(weekAgo.getDate() - 7);
+        weekAgo.setHours(0, 0, 0, 0);
+        
         return logs.filter(log => {
           const logDate = new Date(log.date);
+          logDate.setHours(0, 0, 0, 0);
+          
+          // Check if the log date is within the past week
+          if (logDate >= weekAgo && logDate <= now) {
+            return true;
+          }
+          
+          // Check if the log spans from before the week into the week
           if (spansNextDay(log)) {
             const nextDay = new Date(logDate);
             nextDay.setDate(nextDay.getDate() + 1);
-            return logDate >= weekAgo || nextDay >= weekAgo;
+            return nextDay >= weekAgo;
           }
-          return logDate >= weekAgo;
+          
+          return false;
         });
 
       case 'month':
         const monthAgo = new Date(now);
         monthAgo.setMonth(monthAgo.getMonth() - 1);
+        monthAgo.setHours(0, 0, 0, 0);
+        
         return logs.filter(log => {
           const logDate = new Date(log.date);
+          logDate.setHours(0, 0, 0, 0);
+          
+          // Check if the log date is within the past month
+          if (logDate >= monthAgo && logDate <= now) {
+            return true;
+          }
+          
+          // Check if the log spans from before the month into the month
           if (spansNextDay(log)) {
             const nextDay = new Date(logDate);
             nextDay.setDate(nextDay.getDate() + 1);
-            return logDate >= monthAgo || nextDay >= monthAgo;
+            return nextDay >= monthAgo;
           }
-          return logDate >= monthAgo;
+          
+          return false;
         });
 
       default:
