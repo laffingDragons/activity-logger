@@ -13,27 +13,105 @@ function LogTable() {
   const tableRef = useRef(null);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const [timeFilter, setTimeFilter] = useState('all');    const getFilteredLogs = () => {
+  const [timeFilter, setTimeFilter] = useState('all');
+
+  const getFilteredLogs = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().split('T')[0];
     
+    // Helper function to determine if an activity spans to the next day
+    const spansNextDay = (log) => {
+      const startDateTime = new Date(`${log.date}T${log.startTime}`);
+      const endDateTime = new Date(`${log.date}T${log.endTime}`);
+      return endDateTime < startDateTime;
+    };
+
+    // Helper function to check if activity overlaps with a given date
+    const overlapsWithDate = (log, dateStr) => {
+      const logDate = new Date(log.date);
+      const targetDate = new Date(dateStr);
+      
+      if (logDate.getTime() === targetDate.getTime()) {
+        return true;
+      }
+
+      if (spansNextDay(log)) {
+        const nextDay = new Date(logDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        return nextDay.getTime() === targetDate.getTime();
+      }
+
+      return false;
+    };
+    
     switch (timeFilter) {
       case 'today':
-        return logs.filter(log => log.date === today);
+        return logs.filter(log => {
+          const yesterday = new Date(now);
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split('T')[0];
+          
+          return overlapsWithDate(log, today) || 
+                 (overlapsWithDate(log, yesterdayStr) && spansNextDay(log));
+        });
+
       case 'yesterday':
         const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() );
+        yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = yesterday.toISOString().split('T')[0];
-        return logs.filter(log => log.date === yesterdayStr);
+        
+        const dayBeforeYesterday = new Date(yesterday);
+        dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1);
+        const dayBeforeYesterdayStr = dayBeforeYesterday.toISOString().split('T')[0];
+        
+        return logs.filter(log => {
+          return overlapsWithDate(log, yesterdayStr) || 
+                 (overlapsWithDate(log, dayBeforeYesterdayStr) && spansNextDay(log));
+        });
+
       case 'week':
-        const weekAgo = new Date(now.setDate(now.getDate() - 7));
-        return logs.filter(log => new Date(log.date) >= weekAgo);
+        const weekAgo = new Date(now);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return logs.filter(log => {
+          const logDate = new Date(log.date);
+          if (spansNextDay(log)) {
+            const nextDay = new Date(logDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            return logDate >= weekAgo || nextDay >= weekAgo;
+          }
+          return logDate >= weekAgo;
+        });
+
       case 'month':
-        const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
-        return logs.filter(log => new Date(log.date) >= monthAgo);
+        const monthAgo = new Date(now);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        return logs.filter(log => {
+          const logDate = new Date(log.date);
+          if (spansNextDay(log)) {
+            const nextDay = new Date(logDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            return logDate >= monthAgo || nextDay >= monthAgo;
+          }
+          return logDate >= monthAgo;
+        });
+
       default:
         return logs;
     }
+  };
+
+  const calculateDuration = (startTimeStr, endTimeStr) => {
+    // Create dates on the same day initially
+    const startDate = new Date(`2000-01-01T${startTimeStr}`);
+    const endDate = new Date(`2000-01-01T${endTimeStr}`);
+    
+    // If end time is before start time, activity spans across midnight
+    if (endDate < startDate) {
+      // Add one day to end time
+      endDate.setDate(endDate.getDate() + 1);
+    }
+    
+    return Math.round((endDate - startDate) / (1000 * 60)); // Convert to minutes
   };
 
   const handleEdit = (log) => {
@@ -43,15 +121,11 @@ function LogTable() {
   };
 
   const handleSave = () => {
-    // Calculate the new duration based on start and end times
-    const startDate = new Date(`2000-01-01T${editForm.startTime}`);
-    const endDate = new Date(`2000-01-01T${editForm.endTime}`);
-    const durationInMinutes = Math.round((endDate - startDate) / (1000 * 60));
-
-    // Update all fields including the recalculated duration
+    const durationInMinutes = calculateDuration(editForm.startTime, editForm.endTime);
+    
     const updatedLog = {
       ...editForm,
-      duration: durationInMinutes >= 0 ? durationInMinutes : 0
+      duration: durationInMinutes
     };
 
     updateLog(editingId, updatedLog);
